@@ -6,6 +6,8 @@ disk_size = 200
 # Function to simulate the SCAN disk scheduling algorithm
 def scan(arr, head, direction):
     # Initialize variables
+    temp1 = 0
+    temp2 = 0
     seek_count = 0
     distance, cur_track = 0, 0
     max_seek = 0  # Track the maximum seek time
@@ -14,10 +16,10 @@ def scan(arr, head, direction):
     right = []  # Tracks to the right of the head
     seek_sequence = []  # Order of tracks that the head will seek
 
-    # Add end values to left or right list based on initial direction
-    if direction == "left":
+    # Add 0 to the left list and disk_size - 1 to the right list only if 0 is not in arr
+    if 0 not in arr:
         left.append(0)
-    elif direction == "right":
+    if (disk_size - 1) not in arr:
         right.append(disk_size - 1)
 
     # Categorize requests based on their position relative to the head
@@ -30,7 +32,7 @@ def scan(arr, head, direction):
     # Sort the left and right lists
     left.sort()
     right.sort()
-
+    
     # Process requests in both directions
     run = 2
     while run != 0:
@@ -38,6 +40,7 @@ def scan(arr, head, direction):
         if direction == "left":
             for i in range(len(left) - 1, -1, -1):
                 cur_track = left[i]
+                temp1 = left[1]
                 seek_sequence.append(cur_track)
                 distance = abs(cur_track - head)
                 seek_count += distance
@@ -46,11 +49,17 @@ def scan(arr, head, direction):
                     max_seek = distance
                     max_seek_pair = (head, cur_track)
                 head = cur_track
+            
+            # Add additional distance when crossing 0
+            if run > 1 and right:
+                seek_count += 1  # Add 1 for crossing 0
+                
             direction = "right"
         # Process requests to the right of the head
         elif direction == "right":
             for i in range(len(right)):
                 cur_track = right[i]
+                temp2 = right[0]
                 seek_sequence.append(cur_track)
                 distance = abs(cur_track - head)
                 seek_count += distance
@@ -62,6 +71,11 @@ def scan(arr, head, direction):
             direction = "left"
         run -= 1
 
+    temp = abs(temp1 - 0) + abs(0 - temp2)
+    if temp > max_seek:
+        max_seek = temp
+        max_seek_pair = (temp1, temp2)
+        
     # Print the results
     print("\nTotal number of seek operations for SCAN scheduling algorithm=", seek_count)
     print("Seek Sequence is")
@@ -77,6 +91,8 @@ def scan(arr, head, direction):
 # Function to simulate the C-SCAN disk scheduling algorithm
 def c_scan(arr, head):
     # Initialize variables
+    temp1 = 0
+    temp2 = 0
     seek_count = 0  # Total number of seek operations
     distance = 0  # Distance between head and track
     cur_track = 0  # Current track being accessed
@@ -86,9 +102,11 @@ def c_scan(arr, head):
     right = []  # List to store requests to the right of the head
     seek_sequence = []  # Sequence of seeks performed
 
-    # Add the end values of the disk to the left and right lists
-    left.append(0)
-    right.append(disk_size - 1)
+    # Add 0 to the left list and disk_size - 1 to the right list only if 0 is not in arr
+    if 0 not in arr:
+        left.append(0)
+    if (disk_size - 1) not in arr:
+        right.append(disk_size - 1)
 
     # Categorize requests based on their position relative to the head
     for i in range(len(arr)):
@@ -104,6 +122,11 @@ def c_scan(arr, head):
     # First, service the requests on the right side of the head
     for i in range(len(right)):
         cur_track = right[i]
+        if (disk_size - 1) not in arr:
+            temp1 = right[i-1]
+        else:
+            temp1 = right[i]
+            
         seek_sequence.append(cur_track)  # Append current track to seek sequence
         distance = abs(cur_track - head)  # Calculate absolute distance
         seek_count += distance  # Increase the total count
@@ -122,6 +145,7 @@ def c_scan(arr, head):
     # Now service the requests on the left side
     for i in range(len(left)):
         cur_track = left[i]
+        temp2 = left[1]
         seek_sequence.append(cur_track)  # Append current track to seek sequence
         distance = abs(cur_track - head)  # Calculate absolute distance
         seek_count += distance  # Increase the total count
@@ -133,6 +157,11 @@ def c_scan(arr, head):
 
         head = cur_track  # Accessed track is now the new head
 
+    temp = abs(temp1 - 199) + abs(199 - 0) + abs(0 - temp2)
+    if temp > max_seek:
+        max_seek = temp
+        max_seek_pair = (temp1, temp2)
+        
     # Print the results
     print("\nTotal number of seek operations CSCAN scheduling algorithm=", seek_count)
     print("Seek Sequence is")
@@ -147,6 +176,8 @@ def c_scan(arr, head):
 # Function to simulate the C-LOOK disk scheduling algorithm
 def c_look(arr, head):
     # Initialize variables for seek count, distance, and current track
+    temp1 = 0
+    temp2 = 0
     seek_count = 0
     distance = 0
     cur_track = 0
@@ -170,6 +201,7 @@ def c_look(arr, head):
     # First, service the requests on the right side of the head
     for i in range(len(right)):
         cur_track = right[i]
+        temp1 = right[i]
         
         # Append the current track to the seek sequence
         seek_sequence.append(cur_track)
@@ -196,6 +228,7 @@ def c_look(arr, head):
     # Now service the requests on the left side
     for i in range(len(left)):
         cur_track = left[i]
+        temp2 = left[0]
 
         # Append the current track to the seek sequence
         seek_sequence.append(cur_track)
@@ -213,6 +246,11 @@ def c_look(arr, head):
 
         # Update the head position to the current track
         head = cur_track
+        
+    temp = abs(temp1 - temp2)
+    if temp > max_seek:
+        max_seek = temp
+        max_seek_pair = (temp1, temp2)
 
     # Print the total number of seek operations and the seek sequence
     print("\nTotal number of seek operations for CLOOK scheduling algorithm =", seek_count)
@@ -227,7 +265,7 @@ def c_look(arr, head):
 
 ## Function to generate a list of random disk requests
 def generate_requests(count):
-    return [random.randint(0, 200) for _ in range(count)]
+    return [random.randint(0, 199) for _ in range(count)]
 
 # Main simulation loop
 request_sizes = [10, 20, 50, 100]
@@ -238,7 +276,7 @@ for size in request_sizes:
     direction = 'left'  # Initial direction for SCAN algorithm
     requests = generate_requests(size)  # Generate random requests
     
-    # If want to have the same result as the report can use uncomment the following lines
+    # If want to have the same result as the report can uncomment the following lines
     if(size==10):
         requests=[172, 8, 15, 126, 74, 20, 151, 114, 180, 154]
     elif(size==20):
